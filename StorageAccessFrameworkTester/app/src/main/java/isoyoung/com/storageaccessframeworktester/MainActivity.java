@@ -272,8 +272,8 @@ public class MainActivity extends AppCompatActivity {
         DocumentFile headFile = files[0];
 
         DocumentFile pickedDir = DocumentFile.fromTreeUri(this, treeUti);
-        //DocumentFile newFile = pickedDir.createFile("image/jpeg", "isoya.jpg");
-        // 拡張子を指定しないのは、動画も対応したいから
+        //DocumentFile newFile = pickedDir.createFile("image/jpeg", "isoyoung.jpg");
+        // 拡張子を指定しないのは、動画も対応したいから(でも、同じファイル名だと、拡張子がおかしくなる)
         DocumentFile newFile = pickedDir.createFile("*/*", "hiromoon.jpg"); // TODO: 2017/05/04 これでいける?
 
         InputStream inputStream = null;
