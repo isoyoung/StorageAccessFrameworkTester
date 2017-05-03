@@ -22,6 +22,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mAllDeleteButton; // 全てのファイルを削除するButton
     private Button mSaveUriButton; // Uriを永続化するButton
     private Button mShowResultButton; // 永続化されているURIのコンテンツを取得し、表示するためのボタン
+    private Button mCopyFile;
 
     private TextView mResultTextView; // テキストファイルの中身
     private TextView mPermanentResultTextView; // SharedPreference中のURIが指すTextViewの中身
@@ -170,6 +173,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mCopyFile = (Button) findViewById(R.id.copy_file_button);
+        mCopyFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                copyFile(mCurrentDirUri);
+            }
+        });
+
 
         mListView = (ListView) findViewById(R.id.storage_contents_listview);
         mAdapter = new DirectoryInformationAdapter(this);
@@ -240,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
         DocumentFile pickedDir = DocumentFile.fromTreeUri(this, uri);
         //DocumentFile newFile = pickedDir.createFile("text/plain", fileName);
         DocumentFile newFile = pickedDir.createFile("*/*", fileName);
+
         try {
             OutputStream out = getContentResolver().openOutputStream(newFile.getUri());
             String contents = "hello,world!!"; // テキストファイルに書き込む内容
@@ -252,30 +264,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //  古いやり方で、テキストファイルを作成する
-    private void createTextFileOld() {
-        //File file =
-    }
+    // TODO: 2017/05/04 これで画像のコピーはできるようになった。
+    private void copyFile(Uri treeUti) {
+        // filesの中身は全てJpegファイルであることを期待
+        DocumentFile[] files = getFileListFromUri(treeUti);
 
-    // TODO: 2017/04/02 うまく機能しないので調査をする
-    // URIのディレクトリ直下に画像ファイルを作る (fileNameは"test.jpg"など拡張子がJPEGであることを期待)
-    private void createImageFile(Uri uri, String fileName) {
-        DocumentFile pickedDir = DocumentFile.fromTreeUri(this, uri);
-        DocumentFile newFile = pickedDir.createFile("image/jpeg", fileName);
+        DocumentFile headFile = files[0];
 
-        OutputStream out = null;
-        InputStream is = null;
+        DocumentFile pickedDir = DocumentFile.fromTreeUri(this, treeUti);
+        //DocumentFile newFile = pickedDir.createFile("image/jpeg", "isoya.jpg");
+        // 拡張子を指定しないのは、動画も対応したいから
+        DocumentFile newFile = pickedDir.createFile("*/*", "hiromoon.jpg"); // TODO: 2017/05/04 これでいける?
+
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+
+        BufferedInputStream bufferedInputStream = null;
+        BufferedOutputStream bufferedOutputStream = null;
+
         try {
-            is = getResources().getAssets().open("yumi.jpg");
-            out = getContentResolver().openOutputStream(newFile.getUri());
-            out.write(readAll(is));
-            out.flush();
-            out.close();
+            inputStream = getContentResolver().openInputStream(headFile.getUri());
+            outputStream = getContentResolver().openOutputStream(newFile.getUri());
 
+            // BufferedなんとかStreamを使うのは、高速化のため
+            bufferedInputStream = new BufferedInputStream(inputStream);
+            bufferedOutputStream = new BufferedOutputStream(outputStream);
+
+            bufferedOutputStream.write(readAll(bufferedInputStream));
+            outputStream.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private String readTextFromUri(Uri uri) throws IOException {
@@ -313,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
 
     private byte[] readAll(InputStream inputStream) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[1024 * 64];
         while (true) {
             int len = inputStream.read(buffer);
             if (len < 0) {
@@ -442,6 +464,6 @@ public class MainActivity extends AppCompatActivity {
         return false;
 
     }
-    
+
 }
 

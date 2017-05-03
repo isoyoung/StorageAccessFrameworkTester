@@ -67,6 +67,12 @@
             android:layout_height="wrap_content"
             android:text="Show Result Uri" />
 
+        <Button
+            android:id="@+id/copy_file_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Copy File" />
+
     </LinearLayout>
 
     <LinearLayout
