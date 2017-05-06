@@ -48,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private Button mAllDeleteButton; // 全てのファイルを削除するButton
     private Button mSaveUriButton; // Uriを永続化するButton
     private Button mShowResultButton; // 永続化されているURIのコンテンツを取得し、表示するためのボタン
-    private Button mCopyFile;
+    private Button mCopyFileButton;
+    private Button mShareButton;
 
     private TextView mResultTextView; // テキストファイルの中身
     private TextView mPermanentResultTextView; // SharedPreference中のURIが指すTextViewの中身
@@ -173,14 +174,21 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mCopyFile = (Button) findViewById(R.id.copy_file_button);
-        mCopyFile.setOnClickListener(new View.OnClickListener() {
+        mCopyFileButton = (Button) findViewById(R.id.copy_file_button);
+        mCopyFileButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 copyFile(mCurrentDirUri);
             }
         });
 
+        mShareButton = (Button) findViewById(R.id.share_button);
+        mShareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                shareSns();
+            }
+        });
 
         mListView = (ListView) findViewById(R.id.storage_contents_listview);
         mAdapter = new DirectoryInformationAdapter(this);
@@ -404,6 +412,7 @@ public class MainActivity extends AppCompatActivity {
      * @param dirUri
      */
     private DocumentFile[] getFileListFromUri(Uri dirUri) {
+
         DocumentFile documentFile = DocumentFile.fromTreeUri(this, dirUri);
         return documentFile.listFiles();
 
@@ -462,6 +471,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return false;
+
+    }
+
+    private void shareSns() {
+        DocumentFile[] docList = null;
+
+        if (mCurrentDirUri != null) {
+            docList = getFileListFromUri(mCurrentDirUri);
+        }
+        Uri uri = docList[1].getUri();
+
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.setPackage("com.twitter.android");
+        intent.setType("image/jpeg");
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        startActivity(intent);
 
     }
 
